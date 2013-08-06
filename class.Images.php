@@ -10,6 +10,8 @@
 /* Web: www.sprain.ch
 /* ------------------------------------------------------------------------ */
 /* History:
+/* 2013/08/06 - Mark Howells-Mead - Add option to allow generated images to be 
+/*									larger than the original file. Default is false.
 /* 2012/02/05 - Manuel Reinhard - Bugfix and simplification when cropping images
 /*								  added getHTML() and improved displayHTML()
 /*								  added basic test file
@@ -167,7 +169,7 @@ class Image {
 	 *               c = center
 	 *               b = bottom
 	 */
-	public function resize($max_width, $max_height, $method="fit", $cropAreaLeftRight="c", $cropAreaBottomTop="c", $jpgQuality=75){
+	public function resize($max_width, $max_height, $method="fit", $cropAreaLeftRight="c", $cropAreaBottomTop="c", $jpgQuality=75, $enlarge=false){
 
 		//Get data
 		$width  = $this->getWidth();
@@ -239,6 +241,13 @@ class Image {
 		}//if
 
 
+		if(!$enlarge && ($newImage_width>$width || $newImage_height>$height)){
+			$newImage_width = $width;
+			$max_width = $width;
+			$newImage_height = $height;
+			$max_height = $height;
+		}
+
 		//set some function stuff
 		list($image_create_func, $image_save_func) = $this->getFunctionNames();
 
@@ -257,9 +266,8 @@ class Image {
 
 		ImageCopyResampled($imageC, $newImage, 0, 0, $srcX, $srcY, $max_width, $max_height, $width, $height);
 
-
 		//Set image
-		if($image_save_func == "imageJPG"){
+		if($image_save_func == "imageJPG" || $image_save_func == "ImageJPEG"){
 			if(!$image_save_func($imageC, $this->tmpfile, $jpgQuality)){
 				throw new Exception("Cannot save file ".$this->tmpfile);
 			}//if
@@ -558,6 +566,11 @@ class Image {
 		//set some function stuff
 		switch ($this->getType()){
 			case 'jpeg':
+			    $image_create_func = 'ImageCreateFromJPEG';
+			    $image_save_func = 'ImageJPEG';
+			    break;
+
+			case 'jpg':
 			    $image_create_func = 'ImageCreateFromJPEG';
 			    $image_save_func = 'ImageJPEG';
 			    break;
